@@ -37,3 +37,14 @@ Teslimden 168 saat sonra silme için supabase/functions/order-retention/index.ts
 
 Node.js 22.13+; npm ci; .env.example değerlerini .env.local içine doldurun; npm run dev.
 Kontroller: npm test ve npm run build.
+
+
+## Kısa takip kodu ve kayıttan önce görsel seçimi güncellemesi
+
+Önce bu paketin içindeki dosyaları mevcut GitHub deposunun köküne yükleyip Commit changes yapın. Vercel'de yeni yayın Ready olunca Supabase SQL Editor'da yeni sorgu açıp yalnızca supabase/migrations/004_short_tracking.sql dosyasını çalıştırın. 001/002/003 dosyalarını mevcut projede yeniden çalıştırmayın. Bu migration siparişleri silmez; tekrar çalıştırıldığında mevcut kısa kodları değiştirmez.
+
+Takip kodları 8 karakterdir (örnek A7C92F40). Mevcut siparişlere de kısa kod atanır; eski 32 karakterli kodlar geçerliliğini korur. Müşteri sipariş numarası ve kodu birlikte girer; büyük/küçük harf fark etmez. Bir sipariş için 15 dakikalık pencerede 10 hatalı denemeden sonra o pencere bitene kadar doğru kod dahil sorgular durur. Sayaç sunucudadır; başka tarayıcıyla aşılamaz. Siparişin varlığı veya müşteri bilgileri hatalı sorguda açıklanmaz. Numara bazlı koruma nedeniyle üçüncü kişiler bilinen bir siparişin takibini geçici olarak kısıtlayabilir.
+
+Yeni sipariş formunda iki isteğe bağlı görsel kayıttan önce seçilir, önizlenir ve kaldırılabilir. Siparişi oluştur düğmesi önce siparişi, sonra görselleri kaydeder. Bu iki hizmet tek veritabanı işlemi değildir: görsel yüklemesi başarısız olursa sipariş korunur; bekleyen dosyalar açık pencerede kalır ve Bekleyen görselleri yeniden yükle ile tekrar denenir. Bu düğme yeni sipariş oluşturmaz. Ağ yanıtı kaybolduğu halde dosya kaydedilmişse aynı içerik tanınır; başka bir görselin üzerine yazılmaz. Pencereyi kapatırken bekleyen dosyalar için uyarı gösterilir. Kapatınca yüklenmemiş dosyaları yeniden seçmek gerekir. Yüklenmiş görseller değişmeden kalır.
+
+Yayın sonrası kontrol: yeni siparişte iki görsel seçin, birini kaldırıp yeniden seçin, siparişi oluşturun ve tek sipariş numarasıyla iki görseli doğrulayın. Takip ekranında kısa kodu ve daha önce verilmiş uzun kodu deneyin. Bu güncelleme otomatik silme görevini etkinleştirmez.

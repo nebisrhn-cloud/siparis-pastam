@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {uploadDraftImage} from '../lib/draft-image-upload.ts';
+const file=new File(['image-data'],'cake.png',{type:'image/png'});
+const image={slot:1 as const,file};let uploads=0,downloads=0;let stored:Blob|null=null;let ambiguous=false;let rejectUpload=false;
+const storage={upload:async(path:string,body:File,options:{upsert:false})=>{uploads++;assert.equal(path,'order/1');assert.equal(options.upsert,false);if(rejectUpload||stored)return {error:new Error('Exists or unavailable')};stored=body;return {error:ambiguous?new Error('Network lost'):null};},download:async()=>{downloads++;return {data:stored,error:stored?null:new Error('Missing')};}};
+await uploadDraftImage(storage,'order',image);assert.equal(uploads,1);assert.equal(downloads,0);
+await uploadDraftImage(storage,'order',image);assert.equal(downloads,1);assert.equal(stored,file);
+stored=null;ambiguous=true;await uploadDraftImage(storage,'order',image);assert.equal(stored,file);
+stored=new Blob(['DIFFERENT!']);await assert.rejects(()=>uploadDraftImage(storage,'order',image));assert.equal(await stored.text(),'DIFFERENT!');
+stored=null;rejectUpload=true;await assert.rejects(()=>uploadDraftImage(storage,'order',image));rejectUpload=false;ambiguous=false;await uploadDraftImage(storage,'order',image);assert.equal(stored,file);
+console.log('PASS: image success, ambiguous response retry, identical slot recognition, conflicting-image preservation, failure and retry.');
