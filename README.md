@@ -27,7 +27,7 @@ Verilen HTTPS adresinde Supabase Authentication bölümünde oluşturduğunuz e-
 
 Supabase Authentication > URL Configuration altında Site URL olarak yeni Vercel adresinizi kaydedin. Supabase tabloları zaten kurulduysa migration dosyalarını yeniden çalıştırmayın.
 
-Yalnızca giriş yapan aktif personel siparişleri okuyabilir. Müşteri /takip ekranında sipariş numarası + özel kod kullanır. Herkese açık personel kaydı uygulamada yoktur.
+Yalnızca giriş yapan aktif personel siparişleri okuyabilir. Müşteri /takip ekranında sipariş numarası + özel kod kullanır. Giriş ekranındaki Üye ol ile personel başvurusu yapılır; e-posta doğrulaması ve yönetici onayı olmadan siparişlere erişilmez.
 
 ## Otomatik silme henüz etkin değil
 
@@ -48,3 +48,15 @@ Takip kodları 8 karakterdir (örnek A7C92F40). Mevcut siparişlere de kısa kod
 Yeni sipariş formunda iki isteğe bağlı görsel kayıttan önce seçilir, önizlenir ve kaldırılabilir. Siparişi oluştur düğmesi önce siparişi, sonra görselleri kaydeder. Bu iki hizmet tek veritabanı işlemi değildir: görsel yüklemesi başarısız olursa sipariş korunur; bekleyen dosyalar açık pencerede kalır ve Bekleyen görselleri yeniden yükle ile tekrar denenir. Bu düğme yeni sipariş oluşturmaz. Ağ yanıtı kaybolduğu halde dosya kaydedilmişse aynı içerik tanınır; başka bir görselin üzerine yazılmaz. Pencereyi kapatırken bekleyen dosyalar için uyarı gösterilir. Kapatınca yüklenmemiş dosyaları yeniden seçmek gerekir. Yüklenmiş görseller değişmeden kalır.
 
 Yayın sonrası kontrol: yeni siparişte iki görsel seçin, birini kaldırıp yeniden seçin, siparişi oluşturun ve tek sipariş numarasıyla iki görseli doğrulayın. Takip ekranında kısa kodu ve daha önce verilmiş uzun kodu deneyin. Bu güncelleme otomatik silme görevini etkinleştirmez.
+
+
+## Üyelik yönetimi güncellemesi
+Önce `supabase/migrations/005_memberships.sql` uygulanmalı; ilk yönetici güvenilir SQL Editor üzerinden staff.is_admin=true olarak atanmalıdır. Yeni kayıtlar active=false ve is_admin=false olur. Metadata içindeki yetki alanları kullanılmaz. Var olan personelin erişimi korunur.
+
+Supabase Authentication ayarlarında yeni e-posta kayıtlarına izin verin. Site URL olarak canlı uygulama adresini tanımlayın. E-posta doğrulaması açıksa gerçek personelin doğrulama mesajlarını alabilmesi için Supabase özel SMTP kurulumu gerekir; varsayılan e-posta hizmeti tüm adreslere gönderim sağlamaz. Şifreler yalnızca Supabase Auth'a gönderilir.
+
+Yönetici, Üyelik yönetimi ekranından onaylama, erişimi durdurma ve üyelik silme işlemleri yapabilir. Kendi hesabını ve diğer yöneticileri buradan kapatamaz. Üyelik silme kalıcı uygulama erişim iptalidir: Auth giriş hesabı ve sipariş ilişkileri korunur. Silinen üyelik listeden kalkar ve bu panelden yeniden etkinleştirilemez. Auth hesabını tamamen silme bu sürümün parçası değildir. Yeniden başvurmak eski üyeliği etkinleştirmez.
+
+Yetki durumu 15 saniyede bir ve sekmeye dönünce yenilenir. Veritabanı her istekte aktif personel/yönetici yetkisini kontrol eder. Daha önce açılmış veya indirilmiş içerik geri alınamaz.
+
+E-posta hizmeti kaynağı: https://supabase.com/docs/guides/auth/auth-smtp
