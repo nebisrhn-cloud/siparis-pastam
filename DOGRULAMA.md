@@ -1,0 +1,1 @@
+Vercel paketi standart Next.js 16.3.4 ile derlendi. Derleme ve TypeScript kontrolü başarılı; / ve /takip sayfaları üretildi. Canlı Vercel yayını ve gerçek Supabase kullanıcı akışı henüz doğrulanmadı. Otomatik silme görevi henüz etkin değil. Bağımlılıklar yerel kurulu ortamdan kullanıldı; Vercel üzerinde temiz npm ci adımı yayın sırasında doğrulanacak.

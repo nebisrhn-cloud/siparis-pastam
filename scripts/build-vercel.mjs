@@ -1,0 +1,10 @@
+import nextEnv from '@next/env';
+import {spawnSync} from 'node:child_process';
+nextEnv.loadEnvConfig(process.cwd());
+const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
+const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if(!url||!key)throw new Error('Vercel Environment Variables: NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY eklenmeli.');
+if(!URL.canParse(url)||new URL(url).protocol!=='https:')throw new Error('Supabase URL HTTPS olmalı.');
+const result=spawnSync(process.execPath,['node_modules/next/dist/bin/next','build','--webpack'],{stdio:'inherit',env:{...process.env,NEXT_TELEMETRY_DISABLED:'1'}});
+if(result.error)throw result.error;
+process.exit(result.status??1);
