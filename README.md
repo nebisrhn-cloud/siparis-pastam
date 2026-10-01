@@ -51,12 +51,10 @@ Yayın sonrası kontrol: yeni siparişte iki görsel seçin, birini kaldırıp y
 
 
 ## Üyelik yönetimi güncellemesi
-Önce `supabase/migrations/005_memberships.sql` uygulanmalı; ilk yönetici güvenilir SQL Editor üzerinden staff.is_admin=true olarak atanmalıdır. Yeni kayıtlar active=false ve is_admin=false olur. Metadata içindeki yetki alanları kullanılmaz. Var olan personelin erişimi korunur.
+005_memberships.sql ardından 006_admin_only_approval.sql uygulanmalıdır. İlk admin güvenilir SQL Editor üzerinden atanır. Supabase Authentication > Sign In / Providers > Email > Confirm email kapalı olmalıdır; yeni kayıtlara izin açık olmalıdır. Yeni personel e-posta ve şifreyle kayıt olur; yalnızca admin onayından sonra siparişlere erişir. Üyelik yetkileri kullanıcı metadata alanlarından alınmaz.
 
-Supabase Authentication ayarlarında yeni e-posta kayıtlarına izin verin. Site URL olarak canlı uygulama adresini tanımlayın. E-posta doğrulaması açıksa gerçek personelin doğrulama mesajlarını alabilmesi için Supabase özel SMTP kurulumu gerekir; varsayılan e-posta hizmeti tüm adreslere gönderim sağlamaz. Şifreler yalnızca Supabase Auth'a gönderilir.
+Silme uygulama üyeliğini kaldırır; Auth hesabı ve eski siparişler korunur. Aynı e-postayla tekrar hesap açılmaz: eski şifreyle giriş yaptıktan sonra Yeniden üyelik başvurusu yap seçilir. Başvuru active=false, is_admin=false olarak yeniden onay listesine döner. Durdurulan veya silinen üyeler kendilerine erişim veremez. Şifre bilinmiyorsa yöneticiyle hesap kurtarma süreci gerekir; yeni bir şifre yazarak mevcut hesap ele geçirilemez.
 
-Yönetici, Üyelik yönetimi ekranından onaylama, erişimi durdurma ve üyelik silme işlemleri yapabilir. Kendi hesabını ve diğer yöneticileri buradan kapatamaz. Üyelik silme kalıcı uygulama erişim iptalidir: Auth giriş hesabı ve sipariş ilişkileri korunur. Silinen üyelik listeden kalkar ve bu panelden yeniden etkinleştirilemez. Auth hesabını tamamen silme bu sürümün parçası değildir. Yeniden başvurmak eski üyeliği etkinleştirmez.
+Yerel SQL migration e-posta gönderme ayarını değiştirmez. Confirm email canlı Supabase panelinden ayrıca kapatılır. Daha önce doğrulanmadan kalmış hesapta giriş sorunu varsa Auth hesabı yönetici tarafından ayrıca kontrol edilmelidir. Auth kullanıcılarını SQL ile silmeyin.
 
-Yetki durumu 15 saniyede bir ve sekmeye dönünce yenilenir. Veritabanı her istekte aktif personel/yönetici yetkisini kontrol eder. Daha önce açılmış veya indirilmiş içerik geri alınamaz.
-
-E-posta hizmeti kaynağı: https://supabase.com/docs/guides/auth/auth-smtp
+Yetki durumu 15 saniyede bir ve sekmeye dönünce yenilenir. Veritabanı her istekte personel/yönetici yetkisini kontrol eder. İndirilmiş içerik geri alınamaz.
