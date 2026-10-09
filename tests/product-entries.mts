@@ -1,0 +1,25 @@
+import {PGlite} from '@electric-sql/pglite';
+import {readFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import {addDays,entryTotals} from '../lib/product-entries.ts';
+const db=new PGlite();
+await db.exec(`create role anon;create role authenticated;create schema auth;create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;create table public.staff(id uuid primary key,active boolean,deleted_at timestamptz);create function public.is_staff() returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.staff where id=auth.uid() and active and deleted_at is null)$$;create table public.orders(id integer primary key,customer_name text);insert into public.orders values(1,'Preserved');`);
+await db.exec(await readFile(new URL('../supabase/migrations/20261009212120_product_entries.sql',import.meta.url),'utf8'));
+const member=crypto.randomUUID(),other=crypto.randomUUID(),pending=crypto.randomUUID();
+await db.query('insert into public.staff values($1,true,null),($2,true,null),($3,false,null)',[member,other,pending]);
+async function asUser(id:string){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');}
+const row={id:crypto.randomUUID(),kind:'produced',entry_date:'2026-10-10',product_name:'Poğaça',quantity:12,unit:'adet',notes:''};
+const save=(rows:unknown[])=>db.query('select public.save_product_entries($1)',[JSON.stringify(rows)]);
+await asUser(member);await save([row]);await save([row]);assert.equal((await db.query('select * from product_entries')).rows.length,1);
+await assert.rejects(()=>save([{...row,quantity:13}]));
+for(const patch of [{quantity:0},{quantity:-1},{quantity:1.5},{unit:'litre'},{kind:'other'},{product_name:' '},{quantity:'NaN'},{quantity:1.0001,unit:'kg'}])await assert.rejects(()=>save([{...row,id:crypto.randomUUID(),...patch}]));
+await assert.rejects(()=>save([{...row,id:crypto.randomUUID()},{...row,id:crypto.randomUUID(),quantity:-1}]));assert.equal((await db.query('select * from product_entries')).rows.length,1);
+await save([{...row,id:crypto.randomUUID(),kind:'disposed',quantity:1.25,unit:'kg'}]);
+await asUser(other);assert.equal((await db.query('select * from product_entries')).rows.length,2);await assert.rejects(()=>save([row]));
+await assert.rejects(()=>db.query('update product_entries set quantity=99'));await assert.rejects(()=>db.query('delete from product_entries'));await assert.rejects(()=>db.query('insert into product_entries(id,kind,entry_date,product_name,quantity,unit,created_by) values($1,$2,$3,$4,$5,$6,$7)',[crypto.randomUUID(),'produced','2026-10-10','x',1,'adet',member]));
+await asUser(pending);assert.equal((await db.query('select * from product_entries')).rows.length,0);await assert.rejects(()=>save([row]));
+await db.exec('reset role');await db.query('update staff set active=false where id=$1',[member]);await asUser(member);assert.equal((await db.query('select * from product_entries')).rows.length,0);await assert.rejects(()=>save([row]));
+await db.exec('reset role;set role anon');await assert.rejects(()=>db.query('select * from product_entries'));await assert.rejects(()=>save([row]));
+await db.exec('reset role');assert.equal((await db.query<{customer_name:string}>('select customer_name from orders')).rows[0].customer_name,'Preserved');
+assert.equal(addDays('2026-12-31',2),'2027-01-02');assert.equal(addDays('2028-02-28',2),'2028-03-01');assert.deepEqual(entryTotals([{...row,kind:'produced',unit:'adet'},{...row,kind:'disposed',unit:'kg',quantity:1.25}]),{kg:1.25,adet:12});
+await db.close();console.log('PASS product ledger: persistence, retry idempotency, atomic batch, units, permissions, revocation, existing orders unchanged, date boundaries.');
