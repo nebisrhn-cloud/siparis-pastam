@@ -1,0 +1,4 @@
+import {money,type Order} from './orders';
+export type Report={title:string;scope:string;summary:string;columns:string[];rows:string[][]};
+export const reportDate=(value:string)=>value?value.split('-').reverse().join('.'):'Tüm tarihler';
+export function orderReport(title:string,scope:string,orders:Order[]):Report{return {title,scope,summary:`${orders.length} sipariş · Toplam: ${money(orders.reduce((n,o)=>n+Number(o.price),0))}`,columns:['Sipariş / müşteri','Teslim','Ürün / açıklama','Durum / tutar'],rows:orders.map(o=>[`${o.order_number}\n${o.customer_name}\n${o.phone}`,`${reportDate(o.delivery_date)} ${o.delivery_time.slice(0,5)}`,`${o.cake_type} · ${o.size}${o.cake_message?'\nYazı: '+o.cake_message:''}${o.notes?'\nNot: '+o.notes:''}`,`${o.status}\n${money(Number(o.price))} · ${o.payment_status}\n${o.staff_name}`])};}

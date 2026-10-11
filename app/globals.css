@@ -21,3 +21,5 @@
 @media(max-width:1100px){.product-row{grid-template-columns:24px 1fr 1fr}.product-row label:nth-of-type(5){grid-column:2/4}.product-row .textbtn{grid-column:1;grid-row:auto}.product-row label:first-of-type{grid-column:2/4}}
 @media(max-width:600px){.upcoming-panel{align-items:flex-start;flex-direction:column;gap:10px}.product-row{gap:10px}.products-module h1{font-size:30px}.product-table{min-width:500px}}
 @media(max-width:1100px){.product-row label{grid-column:2/4}.product-row label:nth-of-type(3){grid-column:2/3}.product-row label:nth-of-type(4){grid-column:3/4}}
+
+.products-module>.toolbar{align-items:flex-end}.report-action{margin:0 0 16px}.toolbar>.report-action{margin:0}.report-action .error{display:block}.products-module>.toolbar>label{min-width:150px}
